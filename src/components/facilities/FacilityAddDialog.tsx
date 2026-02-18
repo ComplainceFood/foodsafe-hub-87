@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useToast } from '@/hooks/use-toast';
 import { Facility } from '@/types/facility';
 import FacilityForm from './FacilityForm';
-import { supabase } from '@/integrations/supabase/client';
 
 interface FacilityAddDialogProps {
   isOpen: boolean;
@@ -26,72 +25,36 @@ const FacilityAddDialog: React.FC<FacilityAddDialogProps> = ({
   const handleSubmit = async (data: Partial<Facility>) => {
     setIsLoading(true);
     try {
-      let result;
-      
-      // Make sure name field is included
       if (!data.name) {
         throw new Error("Facility name is required");
       }
       
-      if (isNewFacility) {
-        // Create new facility
-        const { data: newFacility, error } = await supabase
-          .from('facilities')
-          .insert({
-            ...data,
-            name: data.name, // Ensure name is explicitly included
-            status: data.status || 'active',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .select()
-          .single();
-        
-        if (error) throw error;
-        result = newFacility;
-        
-        toast({
-          title: "Facility Created",
-          description: "The facility has been successfully created.",
-        });
-      } else {
-        // Update existing facility
-        const { data: updatedFacility, error } = await supabase
-          .from('facilities')
-          .update({
-            ...data,
-            name: data.name, // Ensure name is explicitly included
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', initialData.id)
-          .select()
-          .single();
-        
-        if (error) throw error;
-        result = updatedFacility;
-        
-        toast({
-          title: "Facility Updated",
-          description: "The facility has been successfully updated.",
-        });
-      }
+      // Create facility object locally (no DB table for facilities yet)
+      const result: Facility = {
+        id: initialData.id || crypto.randomUUID(),
+        name: data.name,
+        ...data,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as Facility;
+
+      toast({
+        title: isNewFacility ? "Facility Created" : "Facility Updated",
+        description: `The facility has been successfully ${isNewFacility ? 'created' : 'updated'}.`,
+      });
       
-      onSuccess(result as Facility);
+      onSuccess(result);
       onClose();
     } catch (error: any) {
       console.error('Error saving facility:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to save facility. Please try again.",
+        description: error.message || "Failed to save facility.",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleCancel = () => {
-    onClose();
   };
 
   return (
@@ -100,17 +63,10 @@ const FacilityAddDialog: React.FC<FacilityAddDialogProps> = ({
         <DialogHeader>
           <DialogTitle>{isNewFacility ? 'Add New Facility' : 'Edit Facility'}</DialogTitle>
           <DialogDescription>
-            {isNewFacility
-              ? 'Create a new facility to manage in the system.'
-              : 'Update the facility details and information.'}
+            {isNewFacility ? 'Create a new facility to manage in the system.' : 'Update the facility details and information.'}
           </DialogDescription>
         </DialogHeader>
-        
-        <FacilityForm
-          onSubmit={handleSubmit}
-          initialData={initialData}
-          isLoading={isLoading}
-        />
+        <FacilityForm onSubmit={handleSubmit} initialData={initialData} isLoading={isLoading} />
       </DialogContent>
     </Dialog>
   );

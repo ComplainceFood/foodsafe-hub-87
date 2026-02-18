@@ -1,7 +1,5 @@
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from './use-toast';
+import { useState } from 'react';
 
 // Types for reference data
 export interface DocumentStatusType {
@@ -28,122 +26,40 @@ export interface DocumentPermissionType {
   is_active: boolean;
 }
 
+// Default statuses used when no DB table exists
+const defaultStatuses: DocumentStatusType[] = [
+  { id: 1, name: 'Draft', description: 'Document is being drafted', sort_order: 1, is_active: true },
+  { id: 2, name: 'In Review', description: 'Document is under review', sort_order: 2, is_active: true },
+  { id: 3, name: 'Approved', description: 'Document has been approved', sort_order: 3, is_active: true },
+  { id: 4, name: 'Published', description: 'Document is published', sort_order: 4, is_active: true },
+  { id: 5, name: 'Archived', description: 'Document is archived', sort_order: 5, is_active: true },
+];
+
+const defaultCategories: DocumentCategoryType[] = [
+  { id: 1, name: 'Policy', description: 'Policy documents', sort_order: 1, is_active: true },
+  { id: 2, name: 'Procedure', description: 'Procedure documents', sort_order: 2, is_active: true },
+  { id: 3, name: 'Work Instruction', description: 'Work instructions', sort_order: 3, is_active: true },
+  { id: 4, name: 'Form', description: 'Forms and templates', sort_order: 4, is_active: true },
+  { id: 5, name: 'Record', description: 'Quality records', sort_order: 5, is_active: true },
+];
+
+const defaultPermissions: DocumentPermissionType[] = [
+  { id: 1, name: 'View', description: 'Can view the document', sort_order: 1, is_active: true },
+  { id: 2, name: 'Edit', description: 'Can edit the document', sort_order: 2, is_active: true },
+  { id: 3, name: 'Approve', description: 'Can approve the document', sort_order: 3, is_active: true },
+];
+
 export function useDocumentStatuses() {
-  const [statuses, setStatuses] = useState<DocumentStatusType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchStatuses = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('document_status_types')
-          .select('*')
-          .eq('is_active', true)
-          .order('sort_order');
-
-        if (error) {
-          throw error;
-        }
-
-        setStatuses(data as DocumentStatusType[]);
-      } catch (err) {
-        console.error('Error fetching document statuses:', err);
-        setError(err as Error);
-        toast({
-          title: 'Error fetching document statuses',
-          description: (err as Error).message,
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStatuses();
-  }, [toast]);
-
-  return { statuses, loading, error };
+  const [statuses] = useState<DocumentStatusType[]>(defaultStatuses);
+  return { statuses, loading: false, error: null };
 }
 
 export function useDocumentCategories() {
-  const [categories, setCategories] = useState<DocumentCategoryType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('document_category_types')
-          .select('*')
-          .eq('is_active', true)
-          .order('sort_order');
-
-        if (error) {
-          throw error;
-        }
-
-        setCategories(data as DocumentCategoryType[]);
-      } catch (err) {
-        console.error('Error fetching document categories:', err);
-        setError(err as Error);
-        toast({
-          title: 'Error fetching document categories',
-          description: (err as Error).message,
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, [toast]);
-
-  return { categories, loading, error };
+  const [categories] = useState<DocumentCategoryType[]>(defaultCategories);
+  return { categories, loading: false, error: null };
 }
 
 export function useDocumentPermissions() {
-  const [permissions, setPermissions] = useState<DocumentPermissionType[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const fetchPermissions = async () => {
-      try {
-        setLoading(true);
-        const { data, error } = await supabase
-          .from('document_permission_types')
-          .select('*')
-          .eq('is_active', true)
-          .order('sort_order');
-
-        if (error) {
-          throw error;
-        }
-
-        setPermissions(data as DocumentPermissionType[]);
-      } catch (err) {
-        console.error('Error fetching document permissions:', err);
-        setError(err as Error);
-        toast({
-          title: 'Error fetching document permissions',
-          description: (err as Error).message,
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPermissions();
-  }, [toast]);
-
-  return { permissions, loading, error };
+  const [permissions] = useState<DocumentPermissionType[]>(defaultPermissions);
+  return { permissions, loading: false, error: null };
 }

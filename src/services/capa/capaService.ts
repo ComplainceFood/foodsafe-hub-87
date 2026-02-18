@@ -1,91 +1,83 @@
 
 import { CAPA, CAPAStats } from '@/types/capa';
-import { CAPAStatus, CAPAPriority, CAPASource, CAPAEffectivenessRating } from '@/types/enums';
-import { convertToCAPAStatus, stringToCAPAPriority, stringToCAPASource } from '@/utils/typeAdapters';
 import { supabase } from '@/integrations/supabase/client';
 
-// Mock CAPA stats for development
 export const getCAPAStats = async (): Promise<CAPAStats> => {
-  // In a real application, this would fetch data from the API
-  return {
-    total: 85,
-    open: 32,
-    completed: 45,
-    overdue: 8,
-    inProgress: 0,
-    openCount: 32,
-    closedCount: 45,
-    overdueCount: 8,
-    pendingVerificationCount: 5,
-    effectivenessRate: 78,
-    byPriority: {
-      [CAPAPriority.Low]: 12,
-      [CAPAPriority.Medium]: 35,
-      [CAPAPriority.High]: 30,
-      [CAPAPriority.Critical]: 8
-    },
-    bySource: {
-      [CAPASource.Audit]: 25,
-      [CAPASource.CustomerComplaint]: 15,
-      [CAPASource.NonConformance]: 20,
-      [CAPASource.SupplierIssue]: 10,
-      [CAPASource.InternalReport]: 15,
-      [CAPASource.RegulatoryInspection]: 0, // Added missing property
-      [CAPASource.Other]: 0 // Added missing property
-    },
-    byDepartment: {
-      'Production': 30,
-      'QA': 25,
-      'Warehouse': 15,
-      'Maintenance': 10,
-      'Other': 5
-    },
-    byStatus: {
-      'Open': 15,
-      'In Progress': 17,
-      'Closed': 40,
-      'Overdue': 8,
-      'Pending_Verification': 5,
-      'Verified': 0
-    },
-    byMonth: {
-      'Jan': 5,
-      'Feb': 8,
-      'Mar': 10,
-      'Apr': 12,
-      'May': 15,
-      'Jun': 20,
-      'Jul': 15
-    },
-    recentActivities: [] // Added missing property
-  };
-};
-
-// Mock function to fetch a single CAPA
-export const getCAPAById = async (id: string): Promise<CAPA | null> => {
-  // This would fetch from an API in production
-  const mockCapa: CAPA = {
-    id,
-    title: `CAPA-${id}`,
-    description: "Description of the CAPA item",
-    status: CAPAStatus.InProgress,
-    priority: CAPAPriority.High,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(), // Added required field
-    created_by: 'John Doe',
-    due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-    assigned_to: 'Jane Smith',
-    source: CAPASource.Audit,
-    source_reference: 'Audit-2023-001',
-    root_cause: 'Process failure',
-    corrective_action: 'Update process documentation',
-    preventive_action: 'Staff training',
-    effectiveness_criteria: 'No recurrence for 90 days',
-    relatedDocuments: [],
-    relatedTraining: []
-  };
+  const { data, error } = await supabase.from('capas').select('*');
   
-  return mockCapa;
+  if (error) throw error;
+  
+  const capas = data || [];
+  const stats: CAPAStats = {
+    total: capas.length,
+    open: capas.filter(c => c.status === 'Open').length,
+    completed: capas.filter(c => c.status === 'Closed' || c.status === 'Completed').length,
+    overdue: capas.filter(c => c.status === 'Overdue').length,
+    inProgress: capas.filter(c => c.status === 'In Progress').length,
+    openCount: capas.filter(c => c.status === 'Open').length,
+    closedCount: capas.filter(c => c.status === 'Closed' || c.status === 'Completed').length,
+    overdueCount: capas.filter(c => c.status === 'Overdue').length,
+    pendingVerificationCount: capas.filter(c => c.status === 'Pending Verification').length,
+    effectivenessRate: 0,
+    byPriority: {},
+    bySource: {},
+    byDepartment: {},
+    byStatus: {},
+    byMonth: {},
+    recentActivities: []
+  };
+
+  capas.forEach(c => {
+    stats.byStatus[c.status] = (stats.byStatus[c.status] || 0) + 1;
+    if (c.priority) stats.byPriority[c.priority] = (stats.byPriority[c.priority] || 0) + 1;
+    if (c.source) stats.bySource[c.source] = (stats.bySource[c.source] || 0) + 1;
+  });
+
+  return stats;
 };
 
-// Additional mock service functions can be added here
+export const getCAPAById = async (id: string): Promise<CAPA | null> => {
+  const { data, error } = await supabase
+    .from('capas')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) {
+    console.error('Error fetching CAPA:', error);
+    return null;
+  }
+  
+  return data as unknown as CAPA;
+};
+
+export const createCAPA = async (capa: Partial<CAPA>): Promise<CAPA> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from('capas')
+    .insert({ ...capa, created_by: user?.id })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as unknown as CAPA;
+};
+
+export const updateCAPA = async (id: string, updates: Partial<CAPA>): Promise<CAPA> => {
+  const { data, error } = await supabase
+    .from('capas')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as unknown as CAPA;
+};
+
+export const fetchAllCAPAs = async (): Promise<CAPA[]> => {
+  const { data, error } = await supabase
+    .from('capas')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return (data || []) as unknown as CAPA[];
+};
