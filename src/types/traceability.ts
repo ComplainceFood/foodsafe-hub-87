@@ -1,5 +1,4 @@
-
-export type RecallStatus = 'Scheduled' | 'In Progress' | 'Completed' | 'Cancelled';
+export type RecallStatus = 'Draft' | 'In Progress' | 'Completed' | 'Cancelled' | 'Scheduled';
 export type RecallType = 'Mock' | 'Actual' | 'Test';
 export type NotificationStatus = 'Pending' | 'Sent' | 'Failed' | 'Delivered' | 'Read';
 export type PartnerType = 'Supplier' | 'Manufacturer' | 'Distributor' | 'Retailer';
@@ -10,16 +9,20 @@ export interface Product {
   description?: string;
   category?: string;
   sku?: string;
-  batch_lot_number: string;
-  manufacturing_date: string;
+  batch_number?: string;
+  lot_number?: string;
+  batch_lot_number?: string;
+  manufacturing_date?: string;
+  manufactured_date?: string;
   expiry_date?: string;
-  attributes?: Record<string, any>;
+  supplier_id?: string;
   status?: string;
-  created_by: string;
+  created_by?: string;
   created_at?: string;
   updated_at?: string;
   quantity?: number;
   units?: string;
+  attributes?: Record<string, any>;
 }
 
 export interface Component {
@@ -27,30 +30,38 @@ export interface Component {
   name: string;
   description?: string;
   category?: string;
-  batch_lot_number: string;
+  batch_number?: string;
+  lot_number?: string;
+  batch_lot_number?: string;
+  supplier?: string;
   supplier_id?: string;
-  received_date: string;
+  received_date?: string;
   expiry_date?: string;
-  attributes?: Record<string, any>;
   status?: string;
-  created_by: string;
+  created_by?: string;
   created_at?: string;
   updated_at?: string;
   quantity?: number;
   units?: string;
+  attributes?: Record<string, any>;
 }
 
 export interface Recall {
   id: string;
   title: string;
   description?: string;
-  recall_type: RecallType;
-  recall_reason: string;
-  status: RecallStatus;
-  initiated_by: string;
+  recall_type?: RecallType;
+  recall_reason?: string;
+  status?: string;
+  severity?: string;
+  initiated_by?: string;
+  initiated_date?: string;
   initiated_at?: string;
+  completion_date?: string;
   completed_at?: string;
-  affected_products?: Record<string, any>;
+  affected_products?: string[] | Record<string, any>;
+  affected_batches?: string[];
+  notification_sent?: boolean;
   corrective_actions?: string;
   created_at?: string;
   updated_at?: string;
@@ -60,8 +71,8 @@ export interface RecallSchedule {
   id: string;
   title: string;
   description?: string;
-  recall_type: RecallType;
-  is_recurring: boolean;
+  recall_type?: RecallType;
+  is_recurring?: boolean;
   recurrence_interval?: number;
   recurrence_pattern?: string;
   one_time_date?: string;
@@ -69,7 +80,7 @@ export interface RecallSchedule {
   next_execution_at?: string;
   assigned_users?: string[];
   status?: string;
-  created_by: string;
+  created_by?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -81,7 +92,7 @@ export interface ProductGenealogy {
   quantity?: number;
   units?: string;
   notes?: string;
-  created_by: string;
+  created_by?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -125,7 +136,7 @@ export interface TraceabilityNotification {
   recipient_id?: string;
   recipient_email?: string;
   status?: NotificationStatus;
-  created_by: string;
+  created_by?: string;
   sent_at?: string;
   created_at?: string;
 }
@@ -138,7 +149,7 @@ export interface RecallSimulation {
   duration?: number;
   success_rate?: number;
   bottlenecks?: string;
-  created_by: string;
+  created_by?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -152,7 +163,7 @@ export interface SupplyChainPartner {
   contact_phone?: string;
   address?: string;
   status?: string;
-  created_by: string;
+  created_by?: string;
   created_at?: string;
   updated_at?: string;
 }

@@ -24,22 +24,14 @@ export function useRealtimeSubscription<T>({
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    let query = supabase.from(table).select('*');
-    
-    if (filter) {
-      query = query.eq(filter.column, filter.value);
-    }
-
-    // Initial fetch
     const fetchData = async () => {
       if (!initialFetch) return;
-      
       try {
         setLoading(true);
+        let query = (supabase.from(table as any) as any).select('*');
+        if (filter) query = query.eq(filter.column, filter.value);
         const { data: initialData, error: fetchError } = await query;
-        
         if (fetchError) throw fetchError;
-        
         const typedData = (initialData as T[]) || [];
         setData(typedData);
         onDataChange(typedData);
@@ -55,42 +47,24 @@ export function useRealtimeSubscription<T>({
 
     fetchData();
 
-    // Set up real-time subscription
     const channel = supabase
       .channel(`${table}_changes`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: table,
-          ...(filter && { filter: `${filter.column}=eq.${filter.value}` })
-        },
-        () => {
-          // Refetch data when changes occur
-          fetchData();
-        }
-      )
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: table,
+        ...(filter && { filter: `${filter.column}=eq.${filter.value}` })
+      }, () => { fetchData(); })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [table, filter?.column, filter?.value, initialFetch]);
 
   const refetch = async () => {
-    let query = supabase.from(table).select('*');
-    
-    if (filter) {
-      query = query.eq(filter.column, filter.value);
-    }
-
     try {
       setLoading(true);
+      let query = (supabase.from(table as any) as any).select('*');
+      if (filter) query = query.eq(filter.column, filter.value);
       const { data: newData, error: fetchError } = await query;
-      
       if (fetchError) throw fetchError;
-      
       const typedData = (newData as T[]) || [];
       setData(typedData);
       onDataChange(typedData);
@@ -104,12 +78,7 @@ export function useRealtimeSubscription<T>({
     }
   };
 
-  return {
-    data,
-    loading,
-    error,
-    refetch
-  };
+  return { data, loading, error, refetch };
 }
 
 export default useRealtimeSubscription;

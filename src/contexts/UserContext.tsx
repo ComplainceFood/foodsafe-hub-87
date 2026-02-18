@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
-import { UserProfile } from '@/types/user'; // Ensure correct import
+import { UserProfile } from '@/types/user';
 
 interface UserContextType {
   user: User | null;
@@ -48,7 +48,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
       }
       
-      // Set up subscription for auth changes
       const { data: listener } = supabase.auth.onAuthStateChange(
         async (_event, session) => {
           setUser(session?.user || null);
@@ -69,19 +68,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     
     setupAuthListener();
-    
-    // No need to return a cleanup function as setupAuthListener handles it
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      
       setUser(data.user);
       setIsAuthenticated(true);
       if (data.user) {
@@ -106,7 +98,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateProfile = async (updates: Partial<UserProfile>) => {
     if (!user) return;
-
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -114,11 +105,10 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', user.id)
         .select()
         .single();
-
       if (error) {
         console.error('Error updating profile:', error);
       } else if (data) {
-        setProfile(data as UserProfile);
+        setProfile(data as unknown as UserProfile);
       }
     } catch (error) {
       console.error('Unexpected error updating profile:', error);
@@ -127,14 +117,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateUser = async (userData: Partial<User>) => {
     if (!user) return;
-    
-    try {
-      // This is a simplified version as Supabase user updates require specific parameters
-      console.log('Updating user data:', userData);
-      setUser(prev => prev ? { ...prev, ...userData } : null);
-    } catch (error) {
-      console.error('Error updating user:', error);
-    }
+    setUser(prev => prev ? { ...prev, ...userData } : null);
   };
 
   const fetchProfile = async (userId: string) => {
@@ -148,7 +131,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) {
         console.error('Error fetching profile:', error);
       } else if (data) {
-        // Ensure data has the correct shape for UserProfile
         const userProfile: UserProfile = {
           id: data.id,
           full_name: data.full_name,
@@ -158,7 +140,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           organization_id: data.organization_id,
           status: data.status,
           avatar_url: data.avatar_url,
-          preferences: data.preferences || {}
+          preferences: (data.preferences as Record<string, any>) || {}
         };
         setProfile(userProfile);
       }
@@ -170,14 +152,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const value = {
-    user,
-    profile,
-    isAuthenticated,
-    loading,
-    signOut,
-    updateProfile,
-    signIn,
-    updateUser
+    user, profile, isAuthenticated, loading,
+    signOut, updateProfile, signIn, updateUser
   };
 
   return (
