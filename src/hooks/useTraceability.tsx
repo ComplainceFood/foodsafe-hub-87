@@ -193,14 +193,14 @@ export const useTraceability = () => {
     try {
       const data = await fetchProductGenealogy(productId);
       if (data) {
-        const treeNode: TreeNode = {
+      const treeNode: TreeNode = {
           id: productId,
           name: "Product Root",
           type: "product",
-          children: Array.isArray(data) ? data.map(item => ({
-            id: item.id || `node-${Math.random()}`,
-            name: item.name || "Unknown",
-            type: item.type || "component"
+          children: Array.isArray(data) ? data.map((item: any) => ({
+            id: item.component_id || item.id || `node-${Math.random()}`,
+            name: item.components?.name || "Unknown",
+            type: "component" as const
           })) : []
         };
         setGenealogyTree(treeNode);
