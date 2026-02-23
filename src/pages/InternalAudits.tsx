@@ -30,7 +30,7 @@ const InternalAudits = () => {
     navigate(`/audits/${auditId}`);
   };
 
-  const getStatusColor = (status: AuditStatus) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'Scheduled':
         return 'bg-blue-100 text-blue-800';

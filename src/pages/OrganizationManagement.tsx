@@ -20,7 +20,7 @@ import { Separator } from '@/components/ui/separator';
 import { useUser } from '@/contexts/UserContext';
 import { Building2, Plus, Users } from 'lucide-react';
 import { Organization } from '@/types/organization';
-import { fetchOrganizations } from '@/services/organizationService';
+import { fetchOrganizations, createOrganization } from '@/services/organizationService';
 import { useForm } from 'react-hook-form';
 import { 
   Form,
