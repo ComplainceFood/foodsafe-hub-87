@@ -284,7 +284,8 @@ export const useTraceability = () => {
     setError(null);
     try {
       const data = await fetchProductComponents(batchLotNumber);
-      setProductComponents(data || []);
+      const mapped = (data || []).map((item: any) => item.components || item);
+      setProductComponents(mapped);
       return data;
     } catch (err) {
       setError(err);
