@@ -101,19 +101,12 @@ const OrganizationManagement: React.FC = () => {
       setSubmitting(true);
       console.log('Creating organization with data:', values);
       
-      const { data, error } = await supabase
-        .from('organizations')
-        .insert({
-          name: values.name,
-          description: values.description || null,
-          contact_email: values.contact_email || null,
-          contact_phone: values.contact_phone || null,
-          status: 'active'
-        })
-        .select('*')
-        .single();
-      
-      if (error) throw error;
+      const newOrg = await createOrganization({
+        name: values.name,
+        description: values.description || undefined,
+        contact_email: values.contact_email || undefined,
+        contact_phone: values.contact_phone || undefined,
+      } as any);
       
       toast({
         title: 'Success',

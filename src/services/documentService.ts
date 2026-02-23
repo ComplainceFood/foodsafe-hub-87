@@ -1,8 +1,7 @@
 
-// Mock document service implementation
+// Document service — using mock data (documents table exists but Document type has extra fields)
 
 import { Document, DocumentCategory } from '@/types/document';
-import { supabase } from '@/integrations/supabase/client';
 import { DocumentActivity, DocumentActionType } from '@/types/document';
 import { DocumentStatus } from '@/types/enums';
 
@@ -81,94 +80,35 @@ export const createDocument = async (document: any): Promise<Document> => {
 
 export const updateDocument = async (document: any): Promise<Document> => {
   const index = mockDocuments.findIndex(doc => doc.id === document.id);
-  if (index === -1) {
-    throw new Error(`Document with ID ${document.id} not found`);
-  }
-  
-  mockDocuments[index] = {
-    ...mockDocuments[index],
-    ...document,
-    updated_at: new Date().toISOString(),
-  };
-  
+  if (index === -1) throw new Error(`Document with ID ${document.id} not found`);
+  mockDocuments[index] = { ...mockDocuments[index], ...document, updated_at: new Date().toISOString() };
   return mockDocuments[index];
 };
 
 export const deleteDocument = async (id: string): Promise<void> => {
   const index = mockDocuments.findIndex(doc => doc.id === id);
-  if (index === -1) {
-    throw new Error(`Document with ID ${id} not found`);
-  }
-  
+  if (index === -1) throw new Error(`Document with ID ${id} not found`);
   mockDocuments.splice(index, 1);
 };
 
 export const fetchActiveDocuments = async () => {
-  try {
-    return {
-      status: DocumentStatus.Active,
-      documents: mockDocuments.filter(doc => doc.status === DocumentStatus.Active),
-    };
-  } catch (error) {
-    console.error("Error fetching active documents:", error);
-    throw error;
-  }
+  return {
+    status: DocumentStatus.Active,
+    documents: mockDocuments.filter(doc => doc.status === DocumentStatus.Active),
+  };
 };
 
+// Stub — document_activities table does not exist
 export const createDocumentActivity = async (activityData: Omit<DocumentActivity, 'id' | 'timestamp'>): Promise<DocumentActivity> => {
-  try {
-    const dataToInsert = {
-      document_id: activityData.document_id,
-      action: activityData.action,
-      user_id: activityData.user_id,
-      user_name: activityData.user_name,
-      user_role: activityData.user_role,
-      comments: activityData.comments,
-      version_id: activityData.version_id,
-      checkout_action: activityData.checkout_action
-    };
-    
-    const { data, error } = await supabase
-      .from('document_activities')
-      .insert([dataToInsert])
-      .select()
-      .single();
-      
-    if (error) {
-      console.error('Error creating document activity:', error);
-      throw error;
-    }
-    
-    if (!data) {
-      throw new Error('Failed to create document activity');
-    }
-    
-    const activity: DocumentActivity = {
-      id: data.id,
-      document_id: data.document_id,
-      action: data.action as DocumentActionType,
-      user_id: data.user_id,
-      user_name: data.user_name,
-      user_role: data.user_role,
-      timestamp: data.timestamp,
-      comments: data.comments,
-      version_id: data.version_id,
-      checkout_action: data.checkout_action
-    };
-    
-    return activity;
-  } catch (error) {
-    console.error('Error in createDocumentActivity:', error);
-    throw error;
-  }
+  const activity: DocumentActivity = {
+    ...activityData,
+    id: crypto.randomUUID(),
+    timestamp: new Date().toISOString(),
+  };
+  return activity;
 };
 
 export default {
-  fetchDocuments,
-  fetchDocument,
-  createDocument,
-  updateDocument,
-  deleteDocument,
-  fetchActiveDocuments,
-  createDocumentActivity
+  fetchDocuments, fetchDocument, createDocument, updateDocument, deleteDocument,
+  fetchActiveDocuments, createDocumentActivity
 };
