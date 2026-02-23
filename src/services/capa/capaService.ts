@@ -1,5 +1,6 @@
 
 import { CAPA, CAPAStats } from '@/types/capa';
+import { CAPAPriority, CAPASource } from '@/types/enums';
 import { supabase } from '@/integrations/supabase/client';
 
 export const getCAPAStats = async (): Promise<CAPAStats> => {
@@ -19,8 +20,21 @@ export const getCAPAStats = async (): Promise<CAPAStats> => {
     overdueCount: capas.filter(c => c.status === 'Overdue').length,
     pendingVerificationCount: capas.filter(c => c.status === 'Pending Verification').length,
     effectivenessRate: 0,
-    byPriority: {},
-    bySource: {},
+    byPriority: {
+      [CAPAPriority.Low]: 0,
+      [CAPAPriority.Medium]: 0,
+      [CAPAPriority.High]: 0,
+      [CAPAPriority.Critical]: 0,
+    },
+    bySource: {
+      [CAPASource.Audit]: 0,
+      [CAPASource.CustomerComplaint]: 0,
+      [CAPASource.InternalReport]: 0,
+      [CAPASource.NonConformance]: 0,
+      [CAPASource.RegulatoryInspection]: 0,
+      [CAPASource.SupplierIssue]: 0,
+      [CAPASource.Other]: 0,
+    },
     byDepartment: {},
     byStatus: {},
     byMonth: {},
@@ -28,9 +42,9 @@ export const getCAPAStats = async (): Promise<CAPAStats> => {
   };
 
   capas.forEach(c => {
-    stats.byStatus[c.status] = (stats.byStatus[c.status] || 0) + 1;
-    if (c.priority) stats.byPriority[c.priority] = (stats.byPriority[c.priority] || 0) + 1;
-    if (c.source) stats.bySource[c.source] = (stats.bySource[c.source] || 0) + 1;
+    if (stats.byStatus) stats.byStatus[c.status] = (stats.byStatus[c.status] || 0) + 1;
+    if (c.priority) stats.byPriority[c.priority as CAPAPriority] = (stats.byPriority[c.priority as CAPAPriority] || 0) + 1;
+    if (c.source) stats.bySource[c.source as CAPASource] = (stats.bySource[c.source as CAPASource] || 0) + 1;
   });
 
   return stats;
@@ -55,7 +69,7 @@ export const createCAPA = async (capa: Partial<CAPA>): Promise<CAPA> => {
   const { data: { user } } = await supabase.auth.getUser();
   const { data, error } = await supabase
     .from('capas')
-    .insert({ ...capa, created_by: user?.id })
+    .insert({ ...capa, created_by: user?.id } as any)
     .select()
     .single();
   if (error) throw error;
@@ -65,7 +79,7 @@ export const createCAPA = async (capa: Partial<CAPA>): Promise<CAPA> => {
 export const updateCAPA = async (id: string, updates: Partial<CAPA>): Promise<CAPA> => {
   const { data, error } = await supabase
     .from('capas')
-    .update(updates)
+    .update(updates as any)
     .eq('id', id)
     .select()
     .single();

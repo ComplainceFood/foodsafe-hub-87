@@ -66,7 +66,7 @@ export const fetchAuditById = async (id: string): Promise<Audit> => {
 export const updateAudit = async (id: string, updates: Partial<Audit>): Promise<Audit> => {
   const { data, error } = await supabase
     .from('audits')
-    .update(updates)
+    .update(updates as any)
     .eq('id', id)
     .select()
     .single();
