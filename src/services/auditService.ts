@@ -46,7 +46,7 @@ export const createAudit = async (audit: Partial<Audit>): Promise<Audit> => {
   const { data: { user } } = await supabase.auth.getUser();
   const { data, error } = await supabase
     .from('audits')
-    .insert({ ...audit, created_by: user?.id })
+    .insert({ ...audit, created_by: user?.id } as any)
     .select()
     .single();
   if (error) throw error;
@@ -66,7 +66,7 @@ export const fetchAuditById = async (id: string): Promise<Audit> => {
 export const updateAudit = async (id: string, updates: Partial<Audit>): Promise<Audit> => {
   const { data, error } = await supabase
     .from('audits')
-    .update(updates)
+    .update(updates as any)
     .eq('id', id)
     .select()
     .single();
@@ -93,7 +93,7 @@ export const fetchAuditFindings = async (auditId: string): Promise<AuditFinding[
 export const createFinding = async (finding: Partial<AuditFinding>): Promise<AuditFinding> => {
   const { data, error } = await supabase
     .from('audit_findings')
-    .insert(finding)
+    .insert(finding as any)
     .select()
     .single();
   if (error) throw error;
@@ -103,7 +103,7 @@ export const createFinding = async (finding: Partial<AuditFinding>): Promise<Aud
 export const updateFinding = async (id: string, updates: Partial<AuditFinding>): Promise<AuditFinding> => {
   const { data, error } = await supabase
     .from('audit_findings')
-    .update(updates)
+    .update(updates as any)
     .eq('id', id)
     .select()
     .single();

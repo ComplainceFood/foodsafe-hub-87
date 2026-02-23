@@ -97,7 +97,7 @@ export const updateExpiryDate = async (documentId: string, newExpiryDate: string
       return null;
     }
 
-    return data as Document;
+    return data as unknown as Document;
   } catch (error) {
     console.error('Error in updateExpiryDate:', error);
     return null;
@@ -127,15 +127,9 @@ export const autoArchiveExpiredDocuments = async (): Promise<void> => {
 
     // Update the status of each expired document to "Archived"
     for (const document of expiredDocuments) {
-      const dbDocument = adaptDocumentToDatabase({
-        ...document,
-        status: 'Archived',
-        updated_at: new Date().toISOString()
-      } as Document);
-
       const { error: updateError } = await supabase
         .from('documents')
-        .update(dbDocument)
+        .update({ status: 'Archived', updated_at: new Date().toISOString() })
         .eq('id', document.id);
 
       if (updateError) {

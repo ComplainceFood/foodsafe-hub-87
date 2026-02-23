@@ -30,7 +30,7 @@ const InternalAudits = () => {
     navigate(`/audits/${auditId}`);
   };
 
-  const getStatusColor = (status: AuditStatus) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'Scheduled':
         return 'bg-blue-100 text-blue-800';
@@ -79,7 +79,7 @@ const InternalAudits = () => {
         <CardHeader className="pb-2">
           <div className="flex justify-between items-start">
             <CardTitle className="text-lg">{audit.title}</CardTitle>
-            <Badge className={getStatusColor(audit.status)}>{audit.status}</Badge>
+            <Badge className={getStatusColor(audit.status as string)}>{audit.status}</Badge>
           </div>
           <CardDescription>
             {audit.auditType} Audit • {audit.findings || 0} Findings

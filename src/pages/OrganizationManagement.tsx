@@ -20,7 +20,7 @@ import { Separator } from '@/components/ui/separator';
 import { useUser } from '@/contexts/UserContext';
 import { Building2, Plus, Users } from 'lucide-react';
 import { Organization } from '@/types/organization';
-import { fetchOrganizations } from '@/services/organizationService';
+import { fetchOrganizations, createOrganization } from '@/services/organizationService';
 import { useForm } from 'react-hook-form';
 import { 
   Form,
@@ -101,19 +101,12 @@ const OrganizationManagement: React.FC = () => {
       setSubmitting(true);
       console.log('Creating organization with data:', values);
       
-      const { data, error } = await supabase
-        .from('organizations')
-        .insert({
-          name: values.name,
-          description: values.description || null,
-          contact_email: values.contact_email || null,
-          contact_phone: values.contact_phone || null,
-          status: 'active'
-        })
-        .select('*')
-        .single();
-      
-      if (error) throw error;
+      const newOrg = await createOrganization({
+        name: values.name,
+        description: values.description || undefined,
+        contact_email: values.contact_email || undefined,
+        contact_phone: values.contact_phone || undefined,
+      } as any);
       
       toast({
         title: 'Success',

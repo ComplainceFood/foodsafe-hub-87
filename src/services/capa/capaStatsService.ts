@@ -5,11 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const fetchCAPAStats = async (): Promise<CAPAStats> => {
   try {
-    const { data, error } = await supabase.from('capa_actions').select('*');
+    const { data, error } = await supabase.from('capas').select('*');
     
     if (error) throw error;
     
-    // Initialize stats object with default values
     const stats: CAPAStats = {
       total: 0,
       open: 0,
@@ -39,67 +38,31 @@ export const fetchCAPAStats = async (): Promise<CAPAStats> => {
       },
       byMonth: {},
       byDepartment: {},
-      recentActivities: [] // Added missing property
+      recentActivities: []
     };
     
-    if (!data || data.length === 0) {
-      return stats;
-    }
+    if (!data || data.length === 0) return stats;
     
-    // Set total count
     stats.total = data.length;
     
-    // Count by status
     data.forEach((capa: any) => {
-      // Count by status
-      if (capa.status === 'Open') {
-        stats.openCount++;
-        stats.open++;
-      } else if (capa.status === 'Closed') {
-        stats.closedCount++;
-      } else if (capa.status === 'Overdue') {
-        stats.overdueCount++;
-        stats.overdue++;
-      } else if (capa.status === 'Pending Verification' || capa.status === 'Verified') {
-        stats.pendingVerificationCount++;
-      }
+      if (capa.status === 'Open') { stats.openCount!++; stats.open++; }
+      else if (capa.status === 'Closed' || capa.status === 'Completed') { stats.closedCount!++; stats.completed++; }
+      else if (capa.status === 'Overdue') { stats.overdueCount!++; stats.overdue++; }
+      else if (capa.status === 'In Progress') { stats.inProgress++; }
+      else if (capa.status === 'Pending Verification') { stats.pendingVerificationCount!++; }
       
-      // Count by priority
-      if (capa.priority && stats.byPriority) {
+      if (capa.priority) {
         const priority = capa.priority as CAPAPriority;
-        if (priority in stats.byPriority) {
-          stats.byPriority[priority]++;
-        }
+        if (priority in stats.byPriority) stats.byPriority[priority]++;
       }
-      
-      // Count by source
-      if (capa.source && stats.bySource) {
+      if (capa.source) {
         const source = capa.source as CAPASource;
-        if (source in stats.bySource) {
-          stats.bySource[source]++;
-        }
-      }
-      
-      // Count by department
-      if (capa.department) {
-        if (!stats.byDepartment[capa.department]) {
-          stats.byDepartment[capa.department] = 0;
-        }
-        stats.byDepartment[capa.department]++;
+        if (source in stats.bySource) stats.bySource[source]++;
       }
     });
     
-    // Calculate effectiveness rate (simplified example)
-    const effectiveCount = data.filter((capa: any) => 
-      capa.effectiveness_verified === true
-    ).length;
-    
-    stats.effectivenessRate = stats.closedCount > 0 
-      ? (effectiveCount / stats.closedCount) * 100 
-      : 0;
-    
     return stats;
-    
   } catch (error) {
     console.error("Error fetching CAPA statistics:", error);
     throw error;
