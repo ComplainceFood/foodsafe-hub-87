@@ -93,7 +93,7 @@ export const fetchAuditFindings = async (auditId: string): Promise<AuditFinding[
 export const createFinding = async (finding: Partial<AuditFinding>): Promise<AuditFinding> => {
   const { data, error } = await supabase
     .from('audit_findings')
-    .insert(finding)
+    .insert(finding as any)
     .select()
     .single();
   if (error) throw error;
