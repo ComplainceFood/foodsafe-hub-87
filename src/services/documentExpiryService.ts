@@ -97,7 +97,7 @@ export const updateExpiryDate = async (documentId: string, newExpiryDate: string
       return null;
     }
 
-    return data as Document;
+    return data as unknown as Document;
   } catch (error) {
     console.error('Error in updateExpiryDate:', error);
     return null;
