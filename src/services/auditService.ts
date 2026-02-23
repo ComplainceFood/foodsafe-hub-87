@@ -46,7 +46,7 @@ export const createAudit = async (audit: Partial<Audit>): Promise<Audit> => {
   const { data: { user } } = await supabase.auth.getUser();
   const { data, error } = await supabase
     .from('audits')
-    .insert({ ...audit, created_by: user?.id })
+    .insert({ ...audit, created_by: user?.id } as any)
     .select()
     .single();
   if (error) throw error;
