@@ -103,7 +103,7 @@ export const createFinding = async (finding: Partial<AuditFinding>): Promise<Aud
 export const updateFinding = async (id: string, updates: Partial<AuditFinding>): Promise<AuditFinding> => {
   const { data, error } = await supabase
     .from('audit_findings')
-    .update(updates)
+    .update(updates as any)
     .eq('id', id)
     .select()
     .single();
