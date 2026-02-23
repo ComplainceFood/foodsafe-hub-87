@@ -1,6 +1,5 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export interface TrainingAutomationConfig {
@@ -15,6 +14,8 @@ export interface TrainingAutomationConfig {
   created_by: string;
 }
 
+// Stub implementation — training_automation_config table does not exist yet.
+// This hook returns a sensible default so the UI renders without errors.
 export const useTrainingConfig = () => {
   const [config, setConfig] = useState<TrainingAutomationConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,119 +24,31 @@ export const useTrainingConfig = () => {
   const fetchConfig = useCallback(async () => {
     try {
       setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('training_automation_config')
-        .select('*')
-        .limit(1)
-        .single();
-      
-      if (error) throw error;
-      
-      // Transform data from database shape to our TypeScript interface
-      const transformedConfig: TrainingAutomationConfig = {
-        id: data.id,
-        enabled: data.enabled,
-        documentChangesTrigger: data.document_changes_trigger,
-        newEmployeeTrigger: data.new_employee_trigger,
-        roleChangeTrigger: data.role_change_trigger,
-        rules: Array.isArray(data.rules) ? data.rules : [],
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        created_by: data.created_by
+      // No DB table yet — use in-memory default
+      const defaultConfig: TrainingAutomationConfig = {
+        id: 'default',
+        enabled: true,
+        documentChangesTrigger: true,
+        newEmployeeTrigger: true,
+        roleChangeTrigger: true,
+        rules: [],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: 'system'
       };
-      
-      setConfig(transformedConfig);
+      setConfig(defaultConfig);
     } catch (err) {
       console.error('Error fetching training config:', err);
       setError(err instanceof Error ? err : new Error('Failed to fetch training configuration'));
-      
-      // Create default config if none exists
-      if (err instanceof Error && err.message.includes('No rows found')) {
-        await createDefaultConfig();
-      }
     } finally {
       setLoading(false);
     }
   }, []);
 
-  const createDefaultConfig = async () => {
-    try {
-      const defaultConfig = {
-        enabled: true,
-        document_changes_trigger: true,
-        new_employee_trigger: true,
-        role_change_trigger: true,
-        rules: [],
-        created_by: (await supabase.auth.getUser()).data.user?.id || 'system'
-      };
-      
-      const { data, error } = await supabase
-        .from('training_automation_config')
-        .insert([defaultConfig])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      const transformedConfig: TrainingAutomationConfig = {
-        id: data.id,
-        enabled: data.enabled,
-        documentChangesTrigger: data.document_changes_trigger,
-        newEmployeeTrigger: data.new_employee_trigger,
-        roleChangeTrigger: data.role_change_trigger,
-        rules: Array.isArray(data.rules) ? data.rules : [],
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        created_by: data.created_by
-      };
-      
-      setConfig(transformedConfig);
-      toast.success('Created default training automation configuration');
-    } catch (err) {
-      console.error('Error creating default config:', err);
-      setError(err instanceof Error ? err : new Error('Failed to create default configuration'));
-      toast.error('Failed to create default configuration');
-    }
-  };
-
   const updateConfig = async (updates: Partial<TrainingAutomationConfig>) => {
     try {
-      if (!config) {
-        throw new Error('Cannot update: configuration not loaded');
-      }
-      
-      // Convert from our interface to database format
-      const dbUpdates: Record<string, any> = {};
-      
-      if (updates.enabled !== undefined) dbUpdates.enabled = updates.enabled;
-      if (updates.documentChangesTrigger !== undefined) dbUpdates.document_changes_trigger = updates.documentChangesTrigger;
-      if (updates.newEmployeeTrigger !== undefined) dbUpdates.new_employee_trigger = updates.newEmployeeTrigger;
-      if (updates.roleChangeTrigger !== undefined) dbUpdates.role_change_trigger = updates.roleChangeTrigger;
-      if (updates.rules !== undefined) dbUpdates.rules = updates.rules;
-      
-      const { data, error } = await supabase
-        .from('training_automation_config')
-        .update(dbUpdates)
-        .eq('id', config.id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      // Transform data from database shape to our TypeScript interface
-      const updatedConfig: TrainingAutomationConfig = {
-        id: data.id,
-        enabled: data.enabled,
-        documentChangesTrigger: data.document_changes_trigger,
-        newEmployeeTrigger: data.new_employee_trigger,
-        roleChangeTrigger: data.role_change_trigger,
-        rules: Array.isArray(data.rules) ? data.rules : [],
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        created_by: data.created_by
-      };
-      
+      if (!config) throw new Error('Cannot update: configuration not loaded');
+      const updatedConfig = { ...config, ...updates, updated_at: new Date().toISOString() };
       setConfig(updatedConfig);
       toast.success('Training automation configuration updated');
       return true;
