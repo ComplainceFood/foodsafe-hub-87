@@ -41,15 +41,17 @@ export const getNonConformanceById = async (id: string): Promise<NonConformance>
 // Create non-conformance
 export const createNonConformance = async (data: Partial<NonConformance>): Promise<NonConformance> => {
   try {
+    const insertData = {
+      ...data,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      reported_date: data.reported_date || new Date().toISOString(),
+      status: data.status || 'On Hold'
+    } as any;
+
     const { data: newNC, error } = await supabase
       .from('non_conformances')
-      .insert([{
-        ...data,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        reported_date: data.reported_date || new Date().toISOString(),
-        status: data.status || 'On Hold'
-      }])
+      .insert([insertData])
       .select()
       .single();
 

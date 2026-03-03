@@ -18,7 +18,7 @@ export const createInvite = async (
 
   const token = uuidv4();
   const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7); // Expire in 7 days
+  expiresAt.setDate(expiresAt.getDate() + 7);
   
   const invite: Omit<OnboardingInvite, 'id'> = {
     email,
@@ -32,7 +32,7 @@ export const createInvite = async (
     used: false
   };
   
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('onboarding_invites')
     .insert(invite)
     .select()
@@ -47,7 +47,7 @@ export const createInvite = async (
 };
 
 export const getInviteByToken = async (token: string): Promise<OnboardingInvite | null> => {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('onboarding_invites')
     .select('*')
     .eq('token', token)
@@ -57,7 +57,6 @@ export const getInviteByToken = async (token: string): Promise<OnboardingInvite 
   
   if (error) {
     if (error.code === 'PGRST116') {
-      // No results found
       return null;
     }
     console.error('Error fetching invite:', error);
@@ -68,7 +67,7 @@ export const getInviteByToken = async (token: string): Promise<OnboardingInvite 
 };
 
 export const markInviteAsUsed = async (token: string): Promise<void> => {
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('onboarding_invites')
     .update({ used: true })
     .eq('token', token);
@@ -80,7 +79,7 @@ export const markInviteAsUsed = async (token: string): Promise<void> => {
 };
 
 export const getOrganizationInvites = async (organizationId: string): Promise<OnboardingInvite[]> => {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from('onboarding_invites')
     .select('*')
     .eq('organization_id', organizationId)
@@ -95,7 +94,7 @@ export const getOrganizationInvites = async (organizationId: string): Promise<On
 };
 
 export const deleteInvite = async (id: string): Promise<void> => {
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from('onboarding_invites')
     .delete()
     .eq('id', id);
